@@ -9,7 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
         :root { --primary: #d4ff00; --bg: #121212; --card: #1e1e1e; --text: #ffffff; --accent: #2c2c2c; --danger: #ff4444; }
-        body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .screen { display: none; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
         .active { display: block; }
         h1, h2 { color: var(--primary); text-transform: uppercase; text-align: center; }
@@ -45,22 +45,22 @@
                 <option value="Ambidestro">Ambidestro</option>
             </select>
             <select id="perf-posicao">
-                <option value="">Posição</option>
+                <option value="">Posição Principal</option>
                 <option value="Goleiro">Goleiro</option>
                 <option value="Fixo">Fixo</option>
                 <option value="Ala">Ala</option>
                 <option value="Pivo">Pivô</option>
             </select>
-            <button onclick="salvarPerfil()">Concluir</button>
+            <button onclick="salvarPerfil()">Concluir Cadastro</button>
         </div>
     </div>
 
     <div id="tela-dashboard" class="screen">
-        <h2>Nova Partida</h2>
+        <h2>Painel Principal</h2>
         <div class="card">
-            <input type="text" id="game-nome" placeholder="Nome do Evento">
-            <input type="number" id="game-tempo" placeholder="Minutos" value="10">
-            <button onclick="iniciarJogo()">Abrir Jogo</button>
+            <input type="text" id="game-nome" placeholder="Nome da Pelada">
+            <input type="number" id="game-tempo" value="10">
+            <button onclick="iniciarJogo()">Novo Jogo</button>
         </div>
         <button onclick="logout()" style="background:none; color:var(--danger);">Sair</button>
     </div>
@@ -80,7 +80,7 @@
     </div>
 
     <script>
-        // CONFIGURAÇÃO DIRETA DA SUA FOTO - JOÃO
+        // ESTES DADOS SÃO EXATAMENTE OS DA SUA FOTO
         const firebaseConfig = {
             apiKey: "AIzaSyDyB1Rzcm_9TPYFHzlbJUMWIN9NupkXjG0",
             authDomain: "arena-fut-42a7d.firebaseapp.com",
@@ -91,7 +91,13 @@
             appId: "1:843798970197:web:222e052ef828065e5f39dc"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        // Força a inicialização limpa
+        if (firebase.apps.length > 0) {
+            firebase.app().delete().then(() => firebase.initializeApp(firebaseConfig));
+        } else {
+            firebase.initializeApp(firebaseConfig);
+        }
+
         const auth = firebase.auth();
         const db = firebase.firestore();
 
@@ -105,13 +111,15 @@
             auth.signInWithPopup(provider).then(res => verificarUsuario(res.user))
                 .catch(err => {
                     document.getElementById('msg-erro').innerText = "Erro: " + err.message;
-                    console.log("DEBUG: ", firebaseConfig.apiKey); // Isso ajuda a ver se a chave carregou
+                    console.error(err);
                 });
         }
 
         async function verificarUsuario(user) {
-            const doc = await db.collection("usuarios").doc(user.uid).get();
-            if (doc.exists) irPara("tela-dashboard"); else irPara("tela-perfil");
+            try {
+                const doc = await db.collection("usuarios").doc(user.uid).get();
+                if (doc.exists) irPara("tela-dashboard"); else irPara("tela-perfil");
+            } catch(e) { irPara("tela-perfil"); }
         }
 
         async function salvarPerfil() {
