@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arena Fut PRO - Conexão Total</title>
+    <title>Arena Fut PRO - Super Conexão</title>
     <style>
         :root { --neon: #00ff88; --dark: #000; --card: #1a1a1a; --border: #333; --blue: #007bff; --red: #dc3545; --gold: #ffcc00; }
         body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 10px; margin: 0; padding-bottom: 80px; min-height: 100vh; }
@@ -35,40 +35,52 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // O ID da sala conforme a sua foto do Firebase
-        const SALA_FIXA = "aLNOO6Ds6fEBmrj6P7he"; 
+        let SALA_ID = "aLNOO6Ds6fEBmrj6P7he"; 
         let tempoSegundos = 600;
         let interval = null;
 
         window.login = () => signInWithPopup(auth, provider);
         window.logout = () => signOut(auth).then(() => location.reload());
 
+        // Função para encontrar a sala correta se o ID falhar
+        async function obterReferenciaSala() {
+            let ref = doc(db, "salas", SALA_ID);
+            let snap = await getDoc(ref);
+            
+            if (snap.exists()) return ref;
+
+            // Se falhar, busca a primeira sala que encontrar na coleção
+            const querySnapshot = await getDocs(collection(db, "salas"));
+            if (!querySnapshot.empty) {
+                SALA_ID = querySnapshot.docs[0].id;
+                return doc(db, "salas", SALA_ID);
+            }
+            return null;
+        }
+
         window.registrarGol = async (timeIdx, nome) => {
             try {
-                // Busca a sala de forma direta
-                const salaRef = doc(db, "salas", SALA_FIXA);
+                const salaRef = await obterReferenciaSala();
+                if (!salaRef) {
+                    alert("Erro crítico: Nenhuma sala encontrada no banco de dados.");
+                    return;
+                }
+
                 const salaSnap = await getDoc(salaRef);
+                let dados = salaSnap.data();
+                let novoPlacar = dados.placar ? [...dados.placar] : [0, 0];
+                novoPlacar[timeIdx] = Number(novoPlacar[timeIdx]) + 1;
 
-                if (salaSnap.exists()) {
-                    let dados = salaSnap.data();
-                    let novoPlacar = dados.placar ? [...dados.placar] : [0, 0];
-                    novoPlacar[timeIdx] = Number(novoPlacar[timeIdx]) + 1;
+                await updateDoc(salaRef, { placar: novoPlacar });
 
-                    await updateDoc(salaRef, { placar: novoPlacar });
-
-                    // Ranking
-                    const userRef = doc(db, "usuarios", nome);
-                    const userSnap = await getDoc(userRef);
-                    if (userSnap.exists()) {
-                        await updateDoc(userRef, { gols: increment(1) });
-                    } else {
-                        await setDoc(userRef, { gols: 1, vitorias: 0 });
-                    }
-                } else {
-                    alert("Atenção: A sala " + SALA_FIXA + " não foi encontrada. Verifique se o ID no Firebase mudou.");
+                const userRef = doc(db, "usuarios", nome);
+                try {
+                    await updateDoc(userRef, { gols: increment(1) });
+                } catch (e) {
+                    await setDoc(userRef, { gols: 1, vitorias: 0 });
                 }
             } catch (error) {
-                alert("Erro: " + error.message);
+                alert("Erro ao marcar gol: " + error.message);
             }
         };
 
@@ -83,25 +95,25 @@
             document.getElementById("cronometro").innerText = (tempoSegundos < 0 ? "-" : "") + `${m}:${s}`;
         }
 
-        onAuthStateChanged(auth, (user) => {
-            const telaLogin = document.getElementById("telaLogin");
-            const conteudo = document.getElementById("conteudo");
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
-                telaLogin.style.display = "none";
-                conteudo.style.display = "block";
+                document.getElementById("telaLogin").style.display = "none";
+                document.getElementById("conteudo").style.display = "block";
                 document.getElementById("userName").innerText = user.displayName;
                 
-                // Monitoramento em tempo real do placar
-                onSnapshot(doc(db, "salas", SALA_FIXA), (s) => {
-                    if(s.exists()){
-                        const d = s.data().placar;
-                        document.getElementById("pA").innerText = d[0] || 0;
-                        document.getElementById("pB").innerText = d[1] || 0;
-                    }
-                });
+                const salaRef = await obterReferenciaSala();
+                if (salaRef) {
+                    onSnapshot(salaRef, (s) => {
+                        if(s.exists()){
+                            const d = s.data().placar;
+                            document.getElementById("pA").innerText = d[0] || 0;
+                            document.getElementById("pB").innerText = d[1] || 0;
+                        }
+                    });
+                }
             } else {
-                telaLogin.style.display = "block";
-                conteudo.style.display = "none";
+                document.getElementById("telaLogin").style.display = "block";
+                document.getElementById("conteudo").style.display = "none";
             }
         });
 
@@ -121,7 +133,7 @@
 
     <div id="conteudo" style="display:none">
         <div class="user-info">
-            <span>Jogador: <b id="userName">...</b></span>
+            <span>Olá, <b id="userName">...</b></span>
             <button class="btn-logout" onclick="logout()">SAIR</button>
         </div>
 
@@ -143,7 +155,7 @@
         <div id="abaRank" style="display:none">
             <div class="card">
                 <h3 style="color:var(--gold)">🏆 TOP ARTILHEIROS</h3>
-                <div id="listaRanking">Sincronizando ranking...</div>
+                <div id="listaRanking">Sincronizando...</div>
             </div>
         </div>
     </div>
