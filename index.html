@@ -40,7 +40,7 @@
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
-                .then(() => { alert("Login realizado com sucesso!"); })
+                .then(() => { alert("Sucesso! O Arena Fut PRO está online."); })
                 .catch(err => { document.getElementById('msg-erro').innerText = "Erro: " + err.message; });
         }
     </script>
