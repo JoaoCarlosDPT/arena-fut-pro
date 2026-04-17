@@ -6,30 +6,20 @@
     <title>ARENA FUT PRO</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
         :root { --primary: #d4ff00; --bg: #121212; --card: #1e1e1e; --text: #ffffff; }
-        body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .screen { display: none; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
-        .active { display: block; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; border-left: 4px solid var(--primary); text-align: center; }
-        button { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .card { background: var(--card); padding: 30px; border-radius: 15px; border-left: 5px solid var(--primary); text-align: center; width: 90%; max-width: 400px; }
+        button { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+        #msg-erro { color: #ff4444; margin-top: 15px; font-size: 0.9rem; }
     </style>
 </head>
 <body>
-    <div id="tela-login" class="screen active">
-        <h1 style="text-align:center; color:var(--primary); margin-top:50px;">ARENA FUT PRO</h1>
+    <div id="tela-login">
+        <h1 style="color:var(--primary);">ARENA FUT PRO</h1>
         <div class="card">
             <button onclick="loginGoogle()">Entrar com Google</button>
-            <p id="msg-erro" style="color:red; font-size:0.8rem; margin-top:10px;"></p>
-        </div>
-    </div>
-
-    <div id="tela-dashboard" class="screen">
-        <h2 style="color:var(--primary); text-align:center;">Bem-vindo ao Arena Fut!</h2>
-        <div class="card">
-            <p>Login realizado com sucesso.</p>
-            <button onclick="location.reload()">Sair</button>
+            <div id="msg-erro"></div>
         </div>
     </div>
 
@@ -44,20 +34,14 @@
             appId: "1:843798970197:web:222e052ef828065e5f39dc"
         };
 
-        // Inicializa o Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
-                .then(() => {
-                    document.getElementById('tela-login').classList.remove('active');
-                    document.getElementById('tela-dashboard').classList.add('active');
-                })
-                .catch(err => {
-                    document.getElementById('msg-erro').innerText = "Erro: " + err.message;
-                });
+                .then(() => { alert("Login realizado com sucesso!"); })
+                .catch(err => { document.getElementById('msg-erro').innerText = "Erro: " + err.message; });
         }
     </script>
 </body>
