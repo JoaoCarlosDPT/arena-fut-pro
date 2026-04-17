@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Fut PRO - Cloud Sync</title>
+    <style>
+        :root { --neon: #00ff88; --dark: #000; --card: #1a1a1a; --border: #333; --blue: #007bff; --red: #dc3545; --gold: #ffcc00; }
+        body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 10px; margin: 0; padding-bottom: 80px; }
+        button { border-radius: 12px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .btn-neon { background: var(--neon); color: #000; padding: 15px; width: 100%; margin-top: 10px; }
+        .card { background: var(--card); padding: 15px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .placar-box { font-size: 55px; font-weight: 900; text-align: center; display: flex; justify-content: center; align-items: center; gap: 20px; }
+        .tab-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: #222; border-radius: 8px; font-size: 11px; cursor: pointer; color: #888; }
+        .tab.active { background: var(--neon); color: #000; font-weight: bold; }
+        .ranking-item { display: grid; grid-template-columns: 30px 1fr 50px; padding: 12px; border-bottom: 1px solid #222; font-size: 13px; align-items: center; }
+    </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, increment, collection, query, orderBy, limit, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDy0lRzcm_9TPYFHz1bJUMwIW9NupkXjG0", 
+            authDomain: "arena-fut-42a7d.firebaseapp.com", 
+            projectId: "arena-fut-42a7d" 
+        };
+
+        const appFirebase = initializeApp(firebaseConfig);
+        const db = getFirestore(appFirebase);
+        const auth = getAuth();
+        const provider = new GoogleAuthProvider();
+
+        window.salaId = "aLNOO6Ds6fEBmrj6P7he"; 
+
+        window.carregarRanking = async () => {
+            const q = query(collection(db, "usuarios"), orderBy("gols", "desc"), limit(10));
+            const snap = await getDocs(q);
+            const lista = document.getElementById("listaRanking");
+            lista.innerHTML = "";
+            snap.forEach((doc, i) => {
+                const d = doc.data();
+                lista.innerHTML += `<div class="ranking-item"><span>${i+1}º</span><b>${doc.id}</b><span style="color:var(--neon)">${d.gols} G</span></div>`;
+            });
+        };
+
+        window.registrarGol = async (timeIdx, nome) => {
+            const salaRef = doc(db, "salas", window.salaId);
+            const userRef = doc(db, "usuarios", nome);
+            await updateDoc(salaRef, { [`placar.${timeIdx}`]: increment(1) });
+            try {
+                await updateDoc(userRef, { gols: increment(1) });
+            } catch (e) {
+                await setDoc(userRef, { gols: 1, vitorias: 0 });
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById("telaLogin").style.display = "none";
+                document.getElementById("conteudo").style.display = "block";
+                onSnapshot(doc(db, "salas", window.salaId), (s) => {
+                    if(s.exists()){
+                        document.getElementById("pA").innerText = s.data().placar[0];
+                        document.getElementById("pB").innerText = s.data().placar[1];
+                    }
+                });
+            }
+        });
+
+        window.login = () => signInWithPopup(auth, provider);
+        window.mudarAba = (aba) => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById("abaJogo").style.display = aba === 'jogo' ? 'block' : 'none';
+            document.getElementById("abaRank").style.display = aba === 'rank' ? 'block' : 'none';
+            if(aba === 'rank') carregarRanking();
+        };
+    </script>
+</head>
+<body>
+    <div id="telaLogin" class="card" style="text-align:center; margin-top:80px;">
+        <h1 style="color:var(--neon)">ARENA FUT PRO</h1>
+        <p style="color:#666">Gestão de Pelada em Nuvem</p>
+        <button class="btn-neon" onclick="login()">🔐 Entrar com Google</button>
+    </div>
+
+    <div id="conteudo" style="display:none">
+        <div class="tab-container">
+            <div class="tab active" onclick="mudarAba('jogo')">JOGO ATUAL</div>
+            <div class="tab" onclick="mudarAba('rank')">RANKING</div>
+        </div>
+
+        <div id="abaJogo">
+            <div class="card">
+                <div class="placar-box"><span id="pA" style="color:var(--blue)">0</span><span>X</span><span id="pB" style="color:var(--red)">0</span></div>
+                <button class="btn-neon" onclick="registrarGol(0, 'Alemão')">⚽ GOL AZUL (Alemão)</button>
+                <button class="btn-neon" style="background:var(--red)" onclick="registrarGol(1, 'Linaldo')">⚽ GOL RED (Linaldo)</button>
+            </div>
+        </div>
+
+        <div id="abaRank" style="display:none">
+            <div class="card">
+                <h3 style="color:var(--gold)">🏆 TOP 10 ARTILHEIROS</h3>
+                <div id="listaRanking">Carregando economia de dados...</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
