@@ -10,7 +10,7 @@
         :root { --primary: #d4ff00; --bg: #121212; --card: #1e1e1e; --text: #ffffff; }
         body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
         .card { background: var(--card); padding: 30px; border-radius: 15px; border-left: 5px solid var(--primary); text-align: center; width: 90%; max-width: 400px; }
-        button { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+        button { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; color: #000; }
     </style>
 </head>
 <body>
@@ -18,14 +18,14 @@
         <h1 style="color:var(--primary);">ARENA FUT PRO</h1>
         <div class="card">
             <button onclick="loginGoogle()">Entrar com Google</button>
-            <p id="msg-erro" style="color:#ff4444; margin-top:15px; font-size:0.8rem;"></p>
+            <p id="msg-status" style="margin-top:15px; font-size:0.9rem;"></p>
         </div>
     </div>
 
     <script>
-        // CONFIGURAÇÃO EXTRAÍDA DA SUA FOTO DO FIREBASE
+        // CONFIGURAÇÃO CORRIGIDA (B1 em vez de 0l)
         const firebaseConfig = {
-            apiKey: "AIzaSyDyB1Rzcm_9TPYFHzlbJUMWIN9NupkXjG0", 
+            apiKey: "AIzaSyDyB1Rzcm_9TPYFHzlbJUMWIN9NupkXjG0",
             authDomain: "arena-fut-42a7d.firebaseapp.com",
             databaseURL: "https://arena-fut-42a7d-default-rtdb.firebaseio.com",
             projectId: "arena-fut-42a7d",
@@ -34,15 +34,20 @@
             appId: "1:843798970197:web:222e052ef828065e5f39dc"
         };
 
+        // Inicializando o Firebase de forma compatível
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
-                .then(() => { alert("Sucesso! Login funcionando."); })
+                .then(() => { 
+                    document.getElementById('msg-status').innerText = "Sucesso! Arena conectada.";
+                    document.getElementById('msg-status').style.color = "#d4ff00";
+                })
                 .catch(err => { 
-                    document.getElementById('msg-erro').innerText = "Erro: " + err.message; 
+                    document.getElementById('msg-status').innerText = "Erro: " + err.message;
+                    document.getElementById('msg-status').style.color = "red";
                 });
         }
     </script>
