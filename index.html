@@ -27,7 +27,7 @@
         <h1 style="margin-top: 50px;">ARENA FUT PRO</h1>
         <div class="card">
             <button onclick="loginGoogle()">Entrar com Google</button>
-            <p id="msg-erro" style="color:red; text-align:center; font-size:0.8rem;"></p>
+            <p id="msg-erro" style="color:red; text-align:center; font-size:0.8rem; margin-top:10px;"></p>
         </div>
     </div>
 
@@ -80,6 +80,7 @@
     </div>
 
     <script>
+        // CONFIGURAÇÃO DIRETA DA SUA FOTO - JOÃO
         const firebaseConfig = {
             apiKey: "AIzaSyDyB1Rzcm_9TPYFHzlbJUMWIN9NupkXjG0",
             authDomain: "arena-fut-42a7d.firebaseapp.com",
@@ -102,7 +103,10 @@
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider).then(res => verificarUsuario(res.user))
-                .catch(err => document.getElementById('msg-erro').innerText = "Erro: " + err.message);
+                .catch(err => {
+                    document.getElementById('msg-erro').innerText = "Erro: " + err.message;
+                    console.log("DEBUG: ", firebaseConfig.apiKey); // Isso ajuda a ver se a chave carregou
+                });
         }
 
         async function verificarUsuario(user) {
