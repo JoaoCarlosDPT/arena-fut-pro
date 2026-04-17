@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arena Fut PRO - Super Conexão</title>
+    <title>Arena Fut PRO - Final</title>
     <style>
         :root { --neon: #00ff88; --dark: #000; --card: #1a1a1a; --border: #333; --blue: #007bff; --red: #dc3545; --gold: #ffcc00; }
         body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 10px; margin: 0; padding-bottom: 80px; min-height: 100vh; }
@@ -17,12 +17,13 @@
         #cronometro { font-size: 40px; text-align: center; color: var(--gold); font-weight: 900; }
         .user-info { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 10px; color: #aaa; }
         .btn-logout { background: transparent; color: #ff4444; border: 1px solid #ff4444; padding: 5px 10px; font-size: 10px; border-radius: 5px; }
+        .ranking-item { display: grid; grid-template-columns: 30px 1fr 50px; padding: 12px; border-bottom: 1px solid #222; font-size: 14px; align-items: center; }
     </style>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, updateDoc, getDoc, setDoc, increment, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, getDoc, setDoc, increment, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyDy0lRzcm_9TPYFHz1bJUMwIW9NupkXjG0", 
@@ -42,14 +43,10 @@
         window.login = () => signInWithPopup(auth, provider);
         window.logout = () => signOut(auth).then(() => location.reload());
 
-        // Função para encontrar a sala correta se o ID falhar
         async function obterReferenciaSala() {
             let ref = doc(db, "salas", SALA_ID);
             let snap = await getDoc(ref);
-            
             if (snap.exists()) return ref;
-
-            // Se falhar, busca a primeira sala que encontrar na coleção
             const querySnapshot = await getDocs(collection(db, "salas"));
             if (!querySnapshot.empty) {
                 SALA_ID = querySnapshot.docs[0].id;
@@ -61,26 +58,49 @@
         window.registrarGol = async (timeIdx, nome) => {
             try {
                 const salaRef = await obterReferenciaSala();
-                if (!salaRef) {
-                    alert("Erro crítico: Nenhuma sala encontrada no banco de dados.");
-                    return;
-                }
-
                 const salaSnap = await getDoc(salaRef);
                 let dados = salaSnap.data();
                 let novoPlacar = dados.placar ? [...dados.placar] : [0, 0];
                 novoPlacar[timeIdx] = Number(novoPlacar[timeIdx]) + 1;
-
                 await updateDoc(salaRef, { placar: novoPlacar });
 
                 const userRef = doc(db, "usuarios", nome);
-                try {
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
                     await updateDoc(userRef, { gols: increment(1) });
-                } catch (e) {
+                } else {
                     await setDoc(userRef, { gols: 1, vitorias: 0 });
                 }
             } catch (error) {
                 alert("Erro ao marcar gol: " + error.message);
+            }
+        };
+
+        window.carregarRanking = async () => {
+            const lista = document.getElementById("listaRanking");
+            lista.innerHTML = "Carregando...";
+            try {
+                const q = query(collection(db, "usuarios"), orderBy("gols", "desc"), limit(10));
+                const snap = await getDocs(q);
+                lista.innerHTML = "";
+                if (snap.empty) {
+                    lista.innerHTML = "Nenhum golo registado ainda.";
+                    return;
+                }
+                let i = 1;
+                snap.forEach((doc) => {
+                    const d = doc.data();
+                    lista.innerHTML += `
+                        <div class="ranking-item">
+                            <span>${i}º</span>
+                            <b>${doc.id}</b>
+                            <span style="color:var(--neon)">${d.gols || 0} G</span>
+                        </div>`;
+                    i++;
+                });
+            } catch (e) {
+                lista.innerHTML = "Erro ao carregar ranking.";
+                console.error(e);
             }
         };
 
@@ -100,7 +120,6 @@
                 document.getElementById("telaLogin").style.display = "none";
                 document.getElementById("conteudo").style.display = "block";
                 document.getElementById("userName").innerText = user.displayName;
-                
                 const salaRef = await obterReferenciaSala();
                 if (salaRef) {
                     onSnapshot(salaRef, (s) => {
@@ -122,6 +141,7 @@
             event.currentTarget.classList.add('active');
             document.getElementById("abaJogo").style.display = aba === 'jogo' ? 'block' : 'none';
             document.getElementById("abaRank").style.display = aba === 'rank' ? 'block' : 'none';
+            if (aba === 'rank') carregarRanking();
         };
     </script>
 </head>
