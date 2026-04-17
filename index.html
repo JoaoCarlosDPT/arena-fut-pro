@@ -6,7 +6,7 @@
     <title>Arena Fut PRO - Vercel</title>
     <style>
         :root { --neon: #00ff88; --dark: #000; --card: #1a1a1a; --border: #333; --blue: #007bff; --red: #dc3545; --gold: #ffcc00; }
-        body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 10px; margin: 0; padding-bottom: 80px; }
+        body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 10px; margin: 0; padding-bottom: 80px; min-height: 100vh; }
         button { border-radius: 12px; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .btn-neon { background: var(--neon); color: #000; padding: 15px; width: 100%; margin-top: 10px; }
         .card { background: var(--card); padding: 15px; border-radius: 16px; margin-bottom: 12px; border: 1px solid var(--border); }
@@ -15,6 +15,9 @@
         .tab { flex: 1; padding: 10px; text-align: center; background: #222; border-radius: 8px; font-size: 11px; cursor: pointer; color: #888; }
         .tab.active { background: var(--neon); color: #000; font-weight: bold; }
         .ranking-item { display: grid; grid-template-columns: 30px 1fr 50px; padding: 12px; border-bottom: 1px solid #222; font-size: 13px; align-items: center; }
+        #cronometro { font-size: 40px; text-align: center; color: var(--gold); font-weight: 900; }
+        @keyframes blink { 50% { opacity: 0.5; color: #ff0000; } }
+        .tempo-acabando { animation: blink 1s infinite; color: #ff4444 !important; }
     </style>
 
     <script type="module">
@@ -34,8 +37,9 @@
         const provider = new GoogleAuthProvider();
 
         window.salaId = "aLNOO6Ds6fEBmrj6P7he"; 
+        let tempoSegundos = 600;
+        let interval = null;
 
-        // Função para carregar o ranking (Economia de créditos)
         window.carregarRanking = async () => {
             const q = query(collection(db, "usuarios"), orderBy("gols", "desc"), limit(10));
             const snap = await getDocs(q);
@@ -47,45 +51,42 @@
             });
         };
 
-        // Função corrigida para atualizar Placar (Array) e Ranking
         window.registrarGol = async (timeIdx, nome) => {
             const salaRef = doc(db, "salas", window.salaId);
             const userRef = doc(db, "usuarios", nome);
-
             try {
                 const salaDoc = await getDoc(salaRef);
                 if (salaDoc.exists()) {
-                    let dados = salaDoc.data();
-                    let novoPlacar = [...dados.placar];
+                    let novoPlacar = [...salaDoc.data().placar];
                     novoPlacar[timeIdx] = Number(novoPlacar[timeIdx]) + 1;
-
-                    // Atualiza Sala
                     await updateDoc(salaRef, { placar: novoPlacar });
-
-                    // Atualiza Ranking do Atleta
-                    try {
-                        await updateDoc(userRef, { gols: increment(1) });
-                    } catch (e) {
-                        await setDoc(userRef, { gols: 1, vitorias: 0 });
-                    }
+                    try { await updateDoc(userRef, { gols: increment(1) }); } 
+                    catch (e) { await setDoc(userRef, { gols: 1, vitorias: 0 }); }
                 }
-            } catch (error) {
-                console.error("Erro:", error);
-                alert("Erro ao salvar! Verifique se o domínio da Vercel está autorizado no Firebase.");
-            }
+            } catch (error) { alert("Erro ao salvar! Verifique o domínio na Vercel."); }
         };
+
+        window.toggleCronometro = () => {
+            if (interval) { clearInterval(interval); interval = null; } 
+            else { interval = setInterval(() => { tempoSegundos--; atuCronometroUI(); }, 1000); }
+        };
+
+        function atuCronometroUI() {
+            let m = Math.floor(Math.abs(tempoSegundos)/60).toString().padStart(2,'0');
+            let s = (Math.abs(tempoSegundos)%60).toString().padStart(2,'0');
+            const d = document.getElementById("cronometro");
+            d.innerText = (tempoSegundos < 0 ? "-" : "") + `${m}:${s}`;
+            if(tempoSegundos <= 0) d.classList.add("tempo-acabando");
+        }
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById("telaLogin").style.display = "none";
                 document.getElementById("conteudo").style.display = "block";
-                
-                // Escuta o placar em tempo real
                 onSnapshot(doc(db, "salas", window.salaId), (s) => {
                     if(s.exists()){
-                        const d = s.data();
-                        document.getElementById("pA").innerText = d.placar[0];
-                        document.getElementById("pB").innerText = d.placar[1];
+                        document.getElementById("pA").innerText = s.data().placar[0];
+                        document.getElementById("pB").innerText = s.data().placar[1];
                     }
                 });
             }
@@ -104,28 +105,29 @@
 <body>
     <div id="telaLogin" class="card" style="text-align:center; margin-top:80px;">
         <h1 style="color:var(--neon)">ARENA FUT PRO</h1>
-        <p style="color:#666">Gestão em Nuvem (Vercel + Firebase)</p>
-        <button class="btn-neon" onclick="login()">🔐 Entrar com Google</button>
+        <button class="btn-neon" onclick="login()">🔐 ENTRAR COM GOOGLE</button>
     </div>
 
     <div id="conteudo" style="display:none">
         <div class="tab-container">
-            <div class="tab active" onclick="mudarAba('jogo')">JOGO ATUAL</div>
+            <div class="tab active" onclick="mudarAba('jogo')">JOGO</div>
             <div class="tab" onclick="mudarAba('rank')">RANKING</div>
         </div>
 
         <div id="abaJogo">
             <div class="card">
+                <div id="cronometro">10:00</div>
+                <button class="btn-empate" style="background:#333; color:#fff; width:100%; padding:10px; margin:10px 0" onclick="toggleCronometro()">PLAY / PAUSE</button>
                 <div class="placar-box"><span id="pA" style="color:var(--blue)">0</span><span>X</span><span id="pB" style="color:var(--red)">0</span></div>
-                <button class="btn-neon" onclick="registrarGol(0, 'Alemão')">⚽ GOL AZUL (Alemão)</button>
-                <button class="btn-neon" style="background:var(--red)" onclick="registrarGol(1, 'Linaldo')">⚽ GOL RED (Linaldo)</button>
+                <button class="btn-neon" onclick="registrarGol(0, 'Alemão')">⚽ GOL AZUL</button>
+                <button class="btn-neon" style="background:var(--red)" onclick="registrarGol(1, 'Linaldo')">⚽ GOL RED</button>
             </div>
         </div>
 
         <div id="abaRank" style="display:none">
             <div class="card">
-                <h3 style="color:var(--gold)">🏆 TOP 10 ARTILHEIROS</h3>
-                <div id="listaRanking">A carregar...</div>
+                <h3 style="color:var(--gold)">🏆 TOP ARTILHEIROS</h3>
+                <div id="listaRanking">Carregando...</div>
             </div>
         </div>
     </div>
