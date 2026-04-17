@@ -8,43 +8,29 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
-        :root { --primary: #d4ff00; --bg: #121212; --card: #1e1e1e; --text: #ffffff; --accent: #2c2c2c; --danger: #ff4444; }
-        body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .screen { display: none; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
+        :root { --primary: #d4ff00; --bg: #121212; --card: #1e1e1e; --text: #ffffff; }
+        body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .screen { display: none; width: 100%; max-width: 500px; padding: 20px; }
         .active { display: block; }
-        h1, h2 { color: var(--primary); text-transform: uppercase; text-align: center; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid var(--primary); }
-        input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: none; box-sizing: border-box; font-size: 1rem; }
-        button { background-color: var(--primary); color: black; font-weight: bold; cursor: pointer; }
-        #cronometro { font-size: 4rem; text-align: center; font-weight: 900; color: var(--primary); font-family: monospace; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; border-left: 4px solid var(--primary); }
+        button { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
     <div id="tela-login" class="screen active">
-        <h1 style="margin-top: 50px;">ARENA FUT PRO</h1>
+        <h1 style="text-align:center; color:var(--primary);">ARENA FUT PRO</h1>
         <div class="card">
             <button onclick="loginGoogle()">Entrar com Google</button>
-            <p id="msg-erro" style="color:red; text-align:center; font-size:0.8rem;"></p>
+            <p id="msg-erro" style="color:red; text-align:center; font-size:0.8rem; margin-top:10px;"></p>
         </div>
     </div>
 
     <div id="tela-dashboard" class="screen">
-        <h2>Painel Principal</h2>
-        <div class="card">
-            <input type="text" id="game-nome" placeholder="Nome da Pelada">
-            <button onclick="irPara('tela-jogo')">Novo Jogo</button>
-        </div>
-    </div>
-
-    <div id="tela-jogo" class="screen">
-        <h2 id="live-nome-evento">Partida</h2>
-        <div id="cronometro">00:00</div>
-        <button onclick="irPara('tela-dashboard')">Voltar</button>
+        <h2 style="color:var(--primary);">Logado com Sucesso!</h2>
+        <button onclick="location.reload()">Sair</button>
     </div>
 
     <script>
-        // Dados extraídos das suas fotos do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDyB1Rzcm_9TPYFHzlbJUMWIN9NupkXjG0",
             authDomain: "arena-fut-42a7d.firebaseapp.com",
@@ -58,15 +44,13 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
-        function irPara(telaId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(telaId).classList.add('active');
-        }
-
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
-                .then(() => irPara('tela-dashboard'))
+                .then(() => {
+                    document.getElementById('tela-login').classList.remove('active');
+                    document.getElementById('tela-dashboard').classList.add('active');
+                })
                 .catch(err => {
                     document.getElementById('msg-erro').innerText = "Erro: " + err.message;
                 });
