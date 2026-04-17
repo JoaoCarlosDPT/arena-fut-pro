@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arena Fut PRO - Estável</title>
+    <title>Arena Fut PRO - Conexão Total</title>
     <style>
         :root { --neon: #00ff88; --dark: #000; --card: #1a1a1a; --border: #333; --blue: #007bff; --red: #dc3545; --gold: #ffcc00; }
         body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; padding: 10px; margin: 0; padding-bottom: 80px; min-height: 100vh; }
@@ -16,13 +16,13 @@
         .tab.active { background: var(--neon); color: #000; font-weight: bold; }
         #cronometro { font-size: 40px; text-align: center; color: var(--gold); font-weight: 900; }
         .user-info { display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-bottom: 10px; color: #aaa; }
-        .btn-logout { background: transparent; color: #ff4444; border: 1px solid #ff4444; padding: 5px 10px; font-size: 10px; }
+        .btn-logout { background: transparent; color: #ff4444; border: 1px solid #ff4444; padding: 5px 10px; font-size: 10px; border-radius: 5px; }
     </style>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, updateDoc, getDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, getDoc, setDoc, increment, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = { 
             apiKey: "AIzaSyDy0lRzcm_9TPYFHz1bJUMwIW9NupkXjG0", 
@@ -35,7 +35,8 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        window.salaId = "aLNOO6Ds6fEBmrj6P7he"; 
+        // O ID da sala conforme a sua foto do Firebase
+        const SALA_FIXA = "aLNOO6Ds6fEBmrj6P7he"; 
         let tempoSegundos = 600;
         let interval = null;
 
@@ -43,25 +44,19 @@
         window.logout = () => signOut(auth).then(() => location.reload());
 
         window.registrarGol = async (timeIdx, nome) => {
-            if (!auth.currentUser) {
-                alert("Você precisa estar logado!");
-                return;
-            }
-
-            const salaRef = doc(db, "salas", window.salaId);
-            
             try {
-                const docSnap = await getDoc(salaRef);
-                if (docSnap.exists()) {
-                    let dados = docSnap.data();
+                // Busca a sala de forma direta
+                const salaRef = doc(db, "salas", SALA_FIXA);
+                const salaSnap = await getDoc(salaRef);
+
+                if (salaSnap.exists()) {
+                    let dados = salaSnap.data();
                     let novoPlacar = dados.placar ? [...dados.placar] : [0, 0];
-                    
-                    // Garante que o valor seja tratado como número antes de somar
                     novoPlacar[timeIdx] = Number(novoPlacar[timeIdx]) + 1;
-                    
+
                     await updateDoc(salaRef, { placar: novoPlacar });
 
-                    // Atualiza Ranking do Jogador
+                    // Ranking
                     const userRef = doc(db, "usuarios", nome);
                     const userSnap = await getDoc(userRef);
                     if (userSnap.exists()) {
@@ -70,11 +65,10 @@
                         await setDoc(userRef, { gols: 1, vitorias: 0 });
                     }
                 } else {
-                    alert("Sala não encontrada no banco de dados.");
+                    alert("Atenção: A sala " + SALA_FIXA + " não foi encontrada. Verifique se o ID no Firebase mudou.");
                 }
             } catch (error) {
-                console.error(error);
-                alert("ERRO DE PERMISSÃO: " + error.message);
+                alert("Erro: " + error.message);
             }
         };
 
@@ -92,17 +86,17 @@
         onAuthStateChanged(auth, (user) => {
             const telaLogin = document.getElementById("telaLogin");
             const conteudo = document.getElementById("conteudo");
-            
             if (user) {
                 telaLogin.style.display = "none";
                 conteudo.style.display = "block";
                 document.getElementById("userName").innerText = user.displayName;
                 
-                onSnapshot(doc(db, "salas", window.salaId), (s) => {
+                // Monitoramento em tempo real do placar
+                onSnapshot(doc(db, "salas", SALA_FIXA), (s) => {
                     if(s.exists()){
                         const d = s.data().placar;
-                        document.getElementById("pA").innerText = d[0];
-                        document.getElementById("pB").innerText = d[1];
+                        document.getElementById("pA").innerText = d[0] || 0;
+                        document.getElementById("pB").innerText = d[1] || 0;
                     }
                 });
             } else {
@@ -149,7 +143,7 @@
         <div id="abaRank" style="display:none">
             <div class="card">
                 <h3 style="color:var(--gold)">🏆 TOP ARTILHEIROS</h3>
-                <div id="listaRanking">Ranking em sincronização...</div>
+                <div id="listaRanking">Sincronizando ranking...</div>
             </div>
         </div>
     </div>
