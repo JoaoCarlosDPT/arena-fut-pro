@@ -21,13 +21,14 @@
         .screen { display: none; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
         .active { display: block; }
         h1, h2 { color: var(--primary); text-transform: uppercase; text-align: center; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid var(--primary); }
         input, select, button {
             width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px;
             border: none; box-sizing: border-box; font-size: 1rem;
         }
         input, select { background: var(--accent); color: white; }
-        button { background-color: var(--primary); color: black; font-weight: bold; cursor: pointer; }
+        button { background-color: var(--primary); color: black; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { opacity: 0.8; }
         #cronometro { font-size: 4rem; text-align: center; font-weight: 900; color: var(--primary); font-family: monospace; margin: 20px 0; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .placar-numero { font-size: 3.5rem; font-weight: bold; text-align: center; margin: 10px 0; }
@@ -45,7 +46,7 @@
     </div>
 
     <div id="tela-perfil" class="screen">
-        <h2>Perfil Técnico</h2>
+        <h2>Seu Perfil Técnico</h2>
         <div class="card">
             <div class="grid-2">
                 <input type="number" id="perf-altura" placeholder="Altura (cm)">
@@ -58,7 +59,7 @@
                 <option value="Ambidestro">Ambidestro</option>
             </select>
             <select id="perf-posicao">
-                <option value="">Posição Principal</option>
+                <option value="">Sua Posição</option>
                 <option value="Goleiro">Goleiro</option>
                 <option value="Fixo">Fixo / Zagueiro</option>
                 <option value="Ala">Ala</option>
@@ -82,7 +83,7 @@
                     <input type="number" id="game-tempo" value="10">
                 </div>
             </div>
-            <button onclick="iniciarJogo()">Abrir Cronômetro</button>
+            <button onclick="iniciarJogo()">Abrir Jogo</button>
         </div>
         <button onclick="logout()" style="background:none; color:var(--danger); border: 1px solid var(--danger);">Sair da Conta</button>
     </div>
@@ -106,18 +107,20 @@
                 <button onclick="marcarGol('B')">+ GOL</button>
             </div>
         </div>
-        <button onclick="finalizarPartida()" style="background:#333; color:white;">Finalizar Pelada</button>
+        <button onclick="finalizarPartida()" style="background:#333; color:white;">Voltar ao Início</button>
     </div>
 
     <script>
-        // CONFIGURAÇÃO REAL - João, estas são suas chaves oficiais:
+        // CONFIGURAÇÃO EXTRAÍDA DA SUA FOTO
         const firebaseConfig = {
-            apiKey: "AIzaSyAsJ-...", // Coloque aqui sua chave real do console
-            authDomain: "arena-fut-pro.firebaseapp.com",
-            projectId: "arena-fut-pro",
-            storageBucket: "arena-fut-pro.appspot.com",
-            messagingSenderId: "9876543210",
-            appId: "1:9876543210:web:abcdef"
+            apiKey: "AIzaSyDyB1Rzcm_9TPYFHzlbJUMWIN9NupkXjG0",
+            authDomain: "arena-fut-42a7d.firebaseapp.com",
+            databaseURL: "https://arena-fut-42a7d-default-rtdb.firebaseio.com",
+            projectId: "arena-fut-42a7d",
+            storageBucket: "arena-fut-42a7d.appspot.com",
+            messagingSenderId: "843798970197",
+            appId: "1:843798970197:web:222e052ef828065e5f39dc",
+            measurementId: "G-SQJCKBVE9V"
         };
 
         // Inicializar Firebase
@@ -137,7 +140,7 @@
                 if (doc.exists) { irPara("tela-dashboard"); } 
                 else { irPara("tela-perfil"); }
             } catch (e) {
-                console.error(e);
+                console.error("Erro ao verificar banco:", e);
                 irPara("tela-perfil");
             }
         }
@@ -153,6 +156,8 @@
 
         async function salvarPerfil() {
             const user = auth.currentUser;
+            if(!user) return;
+            
             const dados = {
                 nome: user.displayName,
                 altura: document.getElementById('perf-altura').value,
@@ -161,12 +166,14 @@
                 posicao: document.getElementById('perf-posicao').value,
                 criadoEm: firebase.firestore.FieldValue.serverTimestamp()
             };
+            
             await db.collection("usuarios").doc(user.uid).set(dados);
             irPara("tela-dashboard");
         }
 
         function logout() { auth.signOut().then(() => location.reload()); }
 
+        // LOGICA DE JOGO
         let tempoRestante, cronInterval;
         function iniciarJogo() {
             tempoRestante = document.getElementById('game-tempo').value * 60;
@@ -190,7 +197,7 @@
                 btn.innerText = "PAUSAR";
                 cronInterval = setInterval(() => {
                     if (tempoRestante > 0) { tempoRestante--; atualizarCron(); }
-                    else { clearInterval(cronInterval); alert("Tempo Esgotado!"); }
+                    else { clearInterval(cronInterval); alert("Fim de Jogo!"); }
                 }, 1000);
             }
         }
@@ -209,9 +216,15 @@
         }
 
         function finalizarPartida() {
-            if(confirm("Encerrar pelada?")) { irPara("tela-dashboard"); ga=0; gb=0; }
+            if(confirm("Encerrar partida?")) {
+                ga = 0; gb = 0;
+                document.getElementById('placar-a').innerText = "0";
+                document.getElementById('placar-b').innerText = "0";
+                irPara("tela-dashboard");
+            }
         }
 
+        // Monitor de Autenticação
         auth.onAuthStateChanged(user => { if (user) verificarUsuario(user); });
     </script>
 </body>
