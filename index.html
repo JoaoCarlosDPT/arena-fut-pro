@@ -4,49 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ARENA FUT PRO</title>
-    
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-
     <style>
-        :root {
-            --primary: #d4ff00; --bg: #121212; --card: #1e1e1e;
-            --text: #ffffff; --accent: #2c2c2c; --danger: #ff4444;
-        }
-        body {
-            font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text);
-            margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
-        }
+        :root { --primary: #d4ff00; --bg: #121212; --card: #1e1e1e; --text: #ffffff; --accent: #2c2c2c; --danger: #ff4444; }
+        body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .screen { display: none; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
         .active { display: block; }
         h1, h2 { color: var(--primary); text-transform: uppercase; text-align: center; }
         .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid var(--primary); }
-        input, select, button {
-            width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px;
-            border: none; box-sizing: border-box; font-size: 1rem;
-        }
+        input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: none; box-sizing: border-box; font-size: 1rem; }
         input, select { background: var(--accent); color: white; }
-        button { background-color: var(--primary); color: black; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { opacity: 0.8; }
+        button { background-color: var(--primary); color: black; font-weight: bold; cursor: pointer; }
         #cronometro { font-size: 4rem; text-align: center; font-weight: 900; color: var(--primary); font-family: monospace; margin: 20px 0; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .placar-numero { font-size: 3.5rem; font-weight: bold; text-align: center; margin: 10px 0; }
-        .info-label { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; display: block; }
+        .placar-numero { font-size: 3.5rem; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
-
     <div id="tela-login" class="screen active">
         <h1 style="margin-top: 50px;">ARENA FUT PRO</h1>
         <div class="card">
-            <button id="btn-login" onclick="loginGoogle()">Entrar com Google</button>
-            <p id="msg-erro" style="color:red; text-align:center; font-size:0.8rem; margin-top:10px;"></p>
+            <button onclick="loginGoogle()">Entrar com Google</button>
+            <p id="msg-erro" style="color:red; text-align:center; font-size:0.8rem;"></p>
         </div>
     </div>
 
     <div id="tela-perfil" class="screen">
-        <h2>Seu Perfil Técnico</h2>
+        <h2>Perfil Técnico</h2>
         <div class="card">
             <div class="grid-2">
                 <input type="number" id="perf-altura" placeholder="Altura (cm)">
@@ -59,13 +45,13 @@
                 <option value="Ambidestro">Ambidestro</option>
             </select>
             <select id="perf-posicao">
-                <option value="">Sua Posição</option>
+                <option value="">Posição</option>
                 <option value="Goleiro">Goleiro</option>
-                <option value="Fixo">Fixo / Zagueiro</option>
+                <option value="Fixo">Fixo</option>
                 <option value="Ala">Ala</option>
-                <option value="Pivo">Pivô / Atacante</option>
+                <option value="Pivo">Pivô</option>
             </select>
-            <button onclick="salvarPerfil()">Concluir Cadastro</button>
+            <button onclick="salvarPerfil()">Concluir</button>
         </div>
     </div>
 
@@ -73,19 +59,10 @@
         <h2>Nova Partida</h2>
         <div class="card">
             <input type="text" id="game-nome" placeholder="Nome do Evento">
-            <div class="grid-2">
-                <div>
-                    <span class="info-label">Jogadores/Time</span>
-                    <input type="number" id="game-jogadores" value="5">
-                </div>
-                <div>
-                    <span class="info-label">Tempo (Min)</span>
-                    <input type="number" id="game-tempo" value="10">
-                </div>
-            </div>
+            <input type="number" id="game-tempo" placeholder="Minutos" value="10">
             <button onclick="iniciarJogo()">Abrir Jogo</button>
         </div>
-        <button onclick="logout()" style="background:none; color:var(--danger); border: 1px solid var(--danger);">Sair da Conta</button>
+        <button onclick="logout()" style="background:none; color:var(--danger);">Sair</button>
     </div>
 
     <div id="tela-jogo" class="screen">
@@ -96,135 +73,73 @@
             <button onclick="resetCronometro()" style="background:#444; color:white;">RESET</button>
         </div>
         <div class="grid-2" style="margin-top:20px;">
-            <div class="card">
-                <span class="info-label">TIME A</span>
-                <div id="placar-a" class="placar-numero">0</div>
-                <button onclick="marcarGol('A')">+ GOL</button>
-            </div>
-            <div class="card">
-                <span class="info-label">TIME B</span>
-                <div id="placar-b" class="placar-numero">0</div>
-                <button onclick="marcarGol('B')">+ GOL</button>
-            </div>
+            <div class="card"><div id="placar-a" class="placar-numero">0</div><button onclick="marcarGol('A')">GOL A</button></div>
+            <div class="card"><div id="placar-b" class="placar-numero">0</div><button onclick="marcarGol('B')">GOL B</button></div>
         </div>
-        <button onclick="finalizarPartida()" style="background:#333; color:white;">Voltar ao Início</button>
+        <button onclick="irPara('tela-dashboard')" style="background:#333; color:white;">Voltar</button>
     </div>
 
     <script>
-        // CONFIGURAÇÃO EXTRAÍDA DA SUA FOTO
         const firebaseConfig = {
             apiKey: "AIzaSyDyB1Rzcm_9TPYFHzlbJUMWIN9NupkXjG0",
             authDomain: "arena-fut-42a7d.firebaseapp.com",
             databaseURL: "https://arena-fut-42a7d-default-rtdb.firebaseio.com",
             projectId: "arena-fut-42a7d",
-            storageBucket: "arena-fut-42a7d.appspot.com",
+            storageBucket: "arena-fut-42a7d.firebasestorage.app",
             messagingSenderId: "843798970197",
-            appId: "1:843798970197:web:222e052ef828065e5f39dc",
-            measurementId: "G-SQJCKBVE9V"
+            appId: "1:843798970197:web:222e052ef828065e5f39dc"
         };
 
-        // Inicializar Firebase
-        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
         function irPara(telaId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(telaId).classList.add('active');
-            window.scrollTo(0,0);
-        }
-
-        async function verificarUsuario(user) {
-            try {
-                const doc = await db.collection("usuarios").doc(user.uid).get();
-                if (doc.exists) { irPara("tela-dashboard"); } 
-                else { irPara("tela-perfil"); }
-            } catch (e) {
-                console.error("Erro ao verificar banco:", e);
-                irPara("tela-perfil");
-            }
         }
 
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).then(res => {
-                verificarUsuario(res.user);
-            }).catch(err => {
-                document.getElementById('msg-erro').innerText = "Erro: " + err.message;
-            });
+            auth.signInWithPopup(provider).then(res => verificarUsuario(res.user))
+                .catch(err => document.getElementById('msg-erro').innerText = "Erro: " + err.message);
+        }
+
+        async function verificarUsuario(user) {
+            const doc = await db.collection("usuarios").doc(user.uid).get();
+            if (doc.exists) irPara("tela-dashboard"); else irPara("tela-perfil");
         }
 
         async function salvarPerfil() {
             const user = auth.currentUser;
-            if(!user) return;
-            
-            const dados = {
+            await db.collection("usuarios").doc(user.uid).set({
                 nome: user.displayName,
                 altura: document.getElementById('perf-altura').value,
                 peso: document.getElementById('perf-peso').value,
-                pe_preferido: document.getElementById('perf-pe').value,
-                posicao: document.getElementById('perf-posicao').value,
-                criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            await db.collection("usuarios").doc(user.uid).set(dados);
+                pe: document.getElementById('perf-pe').value,
+                posicao: document.getElementById('perf-posicao').value
+            });
             irPara("tela-dashboard");
         }
 
-        function logout() { auth.signOut().then(() => location.reload()); }
-
-        // LOGICA DE JOGO
-        let tempoRestante, cronInterval;
+        let tempo, interval;
         function iniciarJogo() {
-            tempoRestante = document.getElementById('game-tempo').value * 60;
+            tempo = document.getElementById('game-tempo').value * 60;
             document.getElementById('live-nome-evento').innerText = document.getElementById('game-nome').value;
-            atualizarCron();
-            irPara("tela-jogo");
+            atualizarCron(); irPara("tela-jogo");
         }
-
         function atualizarCron() {
-            const m = Math.floor(tempoRestante / 60);
-            const s = tempoRestante % 60;
-            document.getElementById('cronometro').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            const m = Math.floor(tempo / 60); const s = tempo % 60;
+            document.getElementById('cronometro').innerText = `${m}:${s < 10 ? '0'+s : s}`;
         }
-
         function toggleCronometro() {
-            const btn = document.getElementById('btn-cron');
-            if (cronInterval) {
-                clearInterval(cronInterval); cronInterval = null;
-                btn.innerText = "RETOMAR";
-            } else {
-                btn.innerText = "PAUSAR";
-                cronInterval = setInterval(() => {
-                    if (tempoRestante > 0) { tempoRestante--; atualizarCron(); }
-                    else { clearInterval(cronInterval); alert("Fim de Jogo!"); }
-                }, 1000);
-            }
+            if (interval) { clearInterval(interval); interval = null; }
+            else { interval = setInterval(() => { if(tempo > 0) { tempo--; atualizarCron(); } else { clearInterval(interval); } }, 1000); }
         }
-
-        function resetCronometro() {
-            clearInterval(cronInterval); cronInterval = null;
-            tempoRestante = document.getElementById('game-tempo').value * 60;
-            atualizarCron();
-            document.getElementById('btn-cron').innerText = "INICIAR";
-        }
-
+        function resetCronometro() { tempo = document.getElementById('game-tempo').value * 60; atualizarCron(); }
         let ga = 0, gb = 0;
-        function marcarGol(t) {
-            if(t==='A') { ga++; document.getElementById('placar-a').innerText = ga; }
-            else { gb++; document.getElementById('placar-b').innerText = gb; }
-        }
-
-        function finalizarPartida() {
-            if(confirm("Encerrar partida?")) {
-                ga = 0; gb = 0;
-                document.getElementById('placar-a').innerText = "0";
-                document.getElementById('placar-b').innerText = "0";
-                irPara("tela-dashboard");
-            }
-        }
-
-        // Monitor de Autenticação
+        function marcarGol(t) { if(t=='A') { ga++; document.getElementById('placar-a').innerText = ga; } else { gb++; document.getElementById('placar-b').innerText = gb; } }
+        function logout() { auth.signOut().then(() => location.reload()); }
         auth.onAuthStateChanged(user => { if (user) verificarUsuario(user); });
     </script>
 </body>
