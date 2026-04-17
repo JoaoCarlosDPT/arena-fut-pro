@@ -11,345 +11,186 @@
 
     <style>
         :root {
-            --primary: #d4ff00; /* Verde Neon */
-            --bg: #121212;
-            --card: #1e1e1e;
-            --text: #ffffff;
-            --accent: #2c2c2c;
-            --danger: #ff4444;
+            --primary: #d4ff00; --bg: #121212; --card: #1e1e1e;
+            --text: #ffffff; --accent: #2c2c2c; --danger: #ff4444;
         }
-
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+            font-family: sans-serif; background-color: var(--bg); color: var(--text);
+            margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
         }
-
-        .screen { display: none; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; animation: fadeIn 0.3s ease; }
+        .screen { display: none; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
         .active { display: block; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        h1, h2 { color: var(--primary); text-transform: uppercase; text-align: center; margin-bottom: 20px; }
-
+        h1, h2 { color: var(--primary); text-transform: uppercase; text-align: center; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; }
         input, select, button {
-            width: 100%;
-            padding: 14px;
-            margin: 10px 0;
-            border-radius: 10px;
-            border: none;
-            box-sizing: border-box;
-            font-size: 1rem;
+            width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px;
+            border: none; box-sizing: border-box; font-size: 1rem;
         }
-
-        input, select { background: var(--accent); color: white; outline: none; }
-        input:focus { border: 1px solid var(--primary); }
-
-        button {
-            background-color: var(--primary);
-            color: black;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: transform 0.1s, opacity 0.2s;
-        }
-
-        button:active { transform: scale(0.98); }
-        button:hover { opacity: 0.9; }
-
-        .card {
-            background: var(--card);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
+        input, select { background: var(--accent); color: white; }
+        button { background-color: var(--primary); color: black; font-weight: bold; cursor: pointer; }
+        #cronometro { font-size: 4rem; text-align: center; font-weight: 900; color: var(--primary); font-family: monospace; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        
-        #cronometro { 
-            font-size: 4rem; 
-            text-align: center; 
-            font-weight: 900; 
-            color: var(--primary); 
-            margin: 15px 0;
-            font-family: monospace;
-        }
-
-        .time-box { 
-            background: #252525; 
-            padding: 15px; 
-            border-radius: 12px; 
-            text-align: center;
-            border-top: 5px solid var(--primary);
-        }
-
-        .placar-numero { font-size: 3.5rem; font-weight: bold; margin: 10px 0; }
-        
-        .btn-gol { background-color: var(--primary); color: black; font-size: 1.2rem; }
-        .btn-reset { background: #444; color: white; font-size: 0.9rem; }
-        
-        .info-label { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; display: block; }
+        .placar-numero { font-size: 3.5rem; font-weight: bold; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="tela-login" class="screen active">
-        <div style="margin-top: 50px; text-align: center;">
-            <h1 style="font-size: 2.5rem;">ARENA FUT PRO</h1>
-            <p>Sincronize sua pelada em tempo real</p>
-            <div class="card" style="margin-top: 40px;">
-                <button onclick="loginGoogle()">Entrar com Google</button>
-            </div>
+        <h1 style="margin-top: 50px;">ARENA FUT PRO</h1>
+        <div class="card">
+            <button id="btn-login" onclick="loginGoogle()">Entrar com Google</button>
+            <p id="msg-erro" style="color:red; text-align:center; font-size:0.8rem;"></p>
         </div>
     </div>
 
     <div id="tela-perfil" class="screen">
-        <h2>Seu Perfil Técnico</h2>
+        <h2>Perfil Técnico</h2>
         <div class="card">
-            <span class="info-label">Medidas Físicas</span>
-            <div class="grid-2">
-                <input type="number" id="perf-altura" placeholder="Altura (cm)">
-                <input type="number" id="perf-peso" placeholder="Peso (kg)">
-            </div>
-            
-            <span class="info-label">Habilidades</span>
+            <input type="number" id="perf-altura" placeholder="Altura (cm)">
+            <input type="number" id="perf-peso" placeholder="Peso (kg)">
             <select id="perf-pe">
                 <option value="">Pé Preferido</option>
                 <option value="Destro">Destro</option>
                 <option value="Canhoto">Canhoto</option>
-                <option value="Ambidestro">Ambidestro</option>
             </select>
-            
             <select id="perf-posicao">
-                <option value="">Sua Posição Principal</option>
+                <option value="">Posição</option>
                 <option value="Goleiro">Goleiro</option>
-                <option value="Fixo">Fixo / Zagueiro</option>
+                <option value="Fixo">Fixo</option>
                 <option value="Ala">Ala</option>
-                <option value="Pivo">Pivô / Atacante</option>
+                <option value="Pivo">Pivô</option>
             </select>
-            
-            <button onclick="salvarPerfil()" style="margin-top: 20px;">Concluir Cadastro</button>
+            <button onclick="salvarPerfil()">Concluir</button>
         </div>
     </div>
 
     <div id="tela-dashboard" class="screen">
         <h2>Nova Partida</h2>
         <div class="card">
-            <span class="info-label">Dados da Pelada</span>
             <input type="text" id="game-nome" placeholder="Nome do Evento">
-            
             <div class="grid-2">
-                <div>
-                    <span class="info-label">Jogadores/Time</span>
-                    <input type="number" id="game-jogadores" placeholder="Ex: 5" value="5">
-                </div>
-                <div>
-                    <span class="info-label">Tempo (Min)</span>
-                    <input type="number" id="game-tempo" placeholder="Ex: 10" value="10">
-                </div>
+                <input type="number" id="game-jogadores" placeholder="Jogadores/Time" value="5">
+                <input type="number" id="game-tempo" placeholder="Minutos" value="10">
             </div>
-
-            <span class="info-label">Financeiro (Chave PIX)</span>
-            <input type="text" id="game-pix" placeholder="Chave para o racha">
-            
-            <button onclick="iniciarJogo()" style="margin-top: 20px;">Abrir Cronômetro</button>
+            <button onclick="iniciarJogo()">Abrir Cronômetro</button>
         </div>
-        <button onclick="logout()" style="background: transparent; color: var(--danger); border: 1px solid var(--danger);">Sair da Conta</button>
+        <button onclick="logout()" style="background:none; color:var(--danger);">Sair</button>
     </div>
 
     <div id="tela-jogo" class="screen">
         <h2 id="live-nome-evento">Partida</h2>
-        
         <div id="cronometro">00:00</div>
-        
-        <div class="grid-2" style="margin-bottom: 20px;">
-            <button onclick="toggleCronometro()" id="btn-cron">INICIAR</button>
-            <button onclick="resetCronometro()" class="btn-reset">REINICIAR</button>
-        </div>
-
         <div class="grid-2">
-            <div class="time-box">
-                <span class="info-label">TIME A</span>
+            <button onclick="toggleCronometro()" id="btn-cron">INICIAR</button>
+            <button onclick="resetCronometro()" style="background:#444; color:white;">RESET</button>
+        </div>
+        <div class="grid-2" style="margin-top:20px;">
+            <div class="card">
                 <div id="placar-a" class="placar-numero">0</div>
-                <button onclick="marcarGol('A')" class="btn-gol">+ GOL</button>
+                <button onclick="marcarGol('A')">GOL A</button>
             </div>
-            <div class="time-box">
-                <span class="info-label">TIME B</span>
+            <div class="card">
                 <div id="placar-b" class="placar-numero">0</div>
-                <button onclick="marcarGol('B')" class="btn-gol">+ GOL</button>
+                <button onclick="marcarGol('B')">GOL B</button>
             </div>
         </div>
-
-        <button onclick="finalizarPartida()" style="margin-top: 30px; background: #333; color: white;">Finalizar Pelada</button>
+        <button onclick="irPara('tela-dashboard')" style="background:#333; color:white;">Voltar</button>
     </div>
 
     <script>
-        // CONFIGURAÇÃO FIREBASE - João, aqui estão suas chaves integradas
+        // === ATENÇÃO: COLE SUAS CHAVES REAIS AQUI ===
         const firebaseConfig = {
-            apiKey: "AIzaSyAsJ...", // Suas chaves reais que já configuramos
-            authDomain: "arena-fut-pro.firebaseapp.com",
-            projectId: "arena-fut-pro",
-            storageBucket: "arena-fut-pro.appspot.com",
-            messagingSenderId: "9876543210",
-            appId: "1:9876543210:web:abcdef"
+            apiKey: "SUA_API_KEY_AQUI",
+            authDomain: "SEU_PROJETO.firebaseapp.com",
+            projectId: "SEU_PROJETO",
+            storageBucket: "SEU_PROJETO.appspot.com",
+            messagingSenderId: "SEU_ID",
+            appId: "SEU_APP_ID"
         };
+        // ===========================================
 
-        // Inicializar Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        let usuarioLogado = null;
-        let tempoRestante = 0;
-        let cronInterval = null;
-        let golsA = 0;
-        let golsB = 0;
-
-        // LOGIN GOOGLE
-        function loginGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).then(result => {
-                usuarioLogado = result.user;
-                verificarUsuarioNoBanco();
-            }).catch(error => alert("Erro ao logar: " + error.message));
-        }
-
-        // VERIFICAR SE O USUÁRIO JÁ EXISTE NO FIRESTORE
-        async function verificarUsuarioNoBanco() {
-            const doc = await db.collection("usuarios").doc(usuarioLogado.uid).get();
-            if (doc.exists) {
-                irPara("tela-dashboard");
-            } else {
-                irPara("tela-perfil");
-            }
-        }
-
-        // SALVAR PERFIL TÉCNICO COMPLETO
-        async function salvarPerfil() {
-            const altura = document.getElementById('perf-altura').value;
-            const peso = document.getElementById('perf-peso').value;
-            const pe = document.getElementById('perf-pe').value;
-            const posicao = document.getElementById('perf-posicao').value;
-
-            if(!altura || !pe || !posicao) return alert("Preencha os campos técnicos!");
-
-            const dados = {
-                nome: usuarioLogado.displayName,
-                email: usuarioLogado.email,
-                foto: usuarioLogado.photoURL,
-                altura: altura,
-                peso: peso,
-                pe_preferido: pe,
-                posicao: posicao,
-                nivel: 3, // Nível base inicial
-                criadoEm: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            await db.collection("usuarios").doc(usuarioLogado.uid).set(dados);
-            irPara("tela-dashboard");
-        }
-
-        // GERENCIADOR DE NAVEGAÇÃO
         function irPara(telaId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(telaId).classList.add('active');
-            window.scrollTo(0,0);
         }
 
-        // INICIAR O AMBIENTE DE JOGO
-        function iniciarJogo() {
-            const nome = document.getElementById('game-nome').value;
-            const tempo = document.getElementById('game-tempo').value;
-            
-            if(!nome || !tempo) return alert("Defina o nome e o tempo!");
+        async function verificarUsuario(user) {
+            try {
+                const doc = await db.collection("usuarios").doc(user.uid).get();
+                if (doc.exists) {
+                    irPara("tela-dashboard");
+                } else {
+                    irPara("tela-perfil");
+                }
+            } catch (e) {
+                console.error("Erro ao ler banco:", e);
+                irPara("tela-perfil"); 
+            }
+        }
 
-            document.getElementById('live-nome-evento').innerText = nome;
-            tempoRestante = tempo * 60;
-            golsA = 0; golsB = 0;
-            document.getElementById('placar-a').innerText = "0";
-            document.getElementById('placar-b').innerText = "0";
-            
-            atualizarDisplayCron();
+        function loginGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).then(res => {
+                verificarUsuario(res.user);
+            }).catch(err => {
+                document.getElementById('msg-erro').innerText = "Erro: " + err.message;
+                console.error(err);
+            });
+        }
+
+        async function salvarPerfil() {
+            const user = auth.currentUser;
+            const dados = {
+                nome: user.displayName,
+                altura: document.getElementById('perf-altura').value,
+                pe: document.getElementById('perf-pe').value,
+                posicao: document.getElementById('perf-posicao').value
+            };
+            await db.collection("usuarios").doc(user.uid).set(dados);
+            irPara("tela-dashboard");
+        }
+
+        function logout() { auth.signOut().then(() => location.reload()); }
+
+        // Lógica simples de cronômetro
+        let tempoRestante, cronInterval;
+        function iniciarJogo() {
+            tempoRestante = document.getElementById('game-tempo').value * 60;
+            document.getElementById('live-nome-evento').innerText = document.getElementById('game-nome').value;
+            atualizarCron();
             irPara("tela-jogo");
         }
-
-        // CONTROLE DO CRONÔMETRO
-        function atualizarDisplayCron() {
+        function atualizarCron() {
             const m = Math.floor(tempoRestante / 60);
             const s = tempoRestante % 60;
-            document.getElementById('cronometro').innerText = 
-                `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            document.getElementById('cronometro').innerText = `${m}:${s < 10 ? '0'+s : s}`;
         }
-
         function toggleCronometro() {
-            const btn = document.getElementById('btn-cron');
-            if (cronInterval) {
-                clearInterval(cronInterval);
-                cronInterval = null;
-                btn.innerText = "RETOMAR";
-                btn.style.backgroundColor = "var(--primary)";
-            } else {
-                btn.innerText = "PAUSAR";
-                btn.style.backgroundColor = "#ff9800";
+            if (cronInterval) { clearInterval(cronInterval); cronInterval = null; }
+            else {
                 cronInterval = setInterval(() => {
-                    if (tempoRestante > 0) {
-                        tempoRestante--;
-                        atualizarDisplayCron();
-                    } else {
-                        clearInterval(cronInterval);
-                        cronInterval = null;
-                        btn.innerText = "FIM";
-                        alert("TEMPO ENCERRADO!");
-                    }
+                    if (tempoRestante > 0) { tempoRestante--; atualizarCron(); }
+                    else { clearInterval(cronInterval); alert("Fim!"); }
                 }, 1000);
             }
         }
-
-        function resetCronometro() {
-            clearInterval(cronInterval);
-            cronInterval = null;
-            tempoRestante = document.getElementById('game-tempo').value * 60;
-            atualizarDisplayCron();
-            document.getElementById('btn-cron').innerText = "INICIAR";
+        function resetCronometro() { 
+            clearInterval(cronInterval); cronInterval = null; 
+            tempoRestante = document.getElementById('game-tempo').value * 60; 
+            atualizarCron(); 
+        }
+        let ga = 0, gb = 0;
+        function marcarGol(t) {
+            if(t==='A') { ga++; document.getElementById('placar-a').innerText = ga; }
+            else { gb++; document.getElementById('placar-b').innerText = gb; }
         }
 
-        // PLACAR
-        function marcarGol(time) {
-            if(time === 'A') {
-                golsA++;
-                document.getElementById('placar-a').innerText = golsA;
-            } else {
-                golsB++;
-                document.getElementById('placar-b').innerText = golsB;
-            }
-        }
-
-        function finalizarPartida() {
-            if(confirm("Deseja encerrar a pelada e salvar os resultados?")) {
-                alert(`Fim de evento! Placar final: ${golsA} x ${golsB}`);
-                irPara("tela-dashboard");
-            }
-        }
-
-        function logout() {
-            auth.signOut().then(() => location.reload());
-        }
-
-        // Monitorar estado de login ao carregar a página
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                usuarioLogado = user;
-                verificarUsuarioNoBanco();
-            }
-        });
+        // Checar se já está logado ao abrir
+        auth.onAuthStateChanged(user => { if (user) verificarUsuario(user); });
     </script>
 </body>
 </html>
