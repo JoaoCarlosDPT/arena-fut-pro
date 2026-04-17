@@ -6,24 +6,48 @@
     <title>ARENA FUT PRO</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    
     <style>
         :root { --primary: #d4ff00; --bg: #121212; --card: #1e1e1e; --text: #ffffff; }
-        body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        .card { background: var(--card); padding: 30px; border-radius: 15px; border-left: 5px solid var(--primary); text-align: center; width: 90%; max-width: 400px; }
-        button { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1rem; color: #000; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+        .screen { display: none; width: 100%; max-width: 450px; padding: 25px; box-sizing: border-box; text-align: center; }
+        .active { display: block; animation: fadeIn 0.5s; }
+        .card { background: var(--card); padding: 30px; border-radius: 20px; border-bottom: 4px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: var(--primary); font-size: 2.5rem; margin-bottom: 5px; font-style: italic; }
+        p.subtitle { color: #888; margin-bottom: 30px; font-size: 0.9rem; }
+        button { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; color: #000; text-transform: uppercase; }
+        button:active { transform: scale(0.98); }
+        .user-info { margin-top: 20px; display: flex; align-items: center; gap: 15px; background: #2c2c2c; padding: 10px; border-radius: 10px; }
+        .user-info img { border-radius: 50%; width: 40px; height: 40px; border: 2px solid var(--primary); }
+        #msg-erro { color: #ff4444; font-size: 0.8rem; margin-top: 15px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <div id="tela-login">
-        <h1 style="color:var(--primary);">ARENA FUT PRO</h1>
+
+    <div id="tela-login" class="screen active">
+        <h1>ARENA FUT PRO</h1>
+        <p class="subtitle">Gestão de Partidas & Ranking</p>
         <div class="card">
-            <button onclick="loginGoogle()">Entrar com Google</button>
-            <p id="msg-status" style="margin-top:15px; font-size:0.9rem;"></p>
+            <button onclick="fazerLogin()">Entrar com Google</button>
+            <div id="msg-erro"></div>
+        </div>
+    </div>
+
+    <div id="tela-principal" class="screen">
+        <h2 style="color: var(--primary);">BEM-VINDO!</h2>
+        <div id="perfil-usuario" class="user-info">
+            </div>
+        <div class="card" style="margin-top: 20px;">
+            <p>Seu Ranking: <span style="color:var(--primary); font-weight:bold;">#1</span></p>
+            <button onclick="alert('Funcionalidade em desenvolvimento!')">Nova Partida</button>
+            <button onclick="fazerLogout()" style="background: transparent; color: #888; margin-top: 10px;">Sair</button>
         </div>
     </div>
 
     <script>
-        // CONFIGURAÇÃO CORRIGIDA (B1 em vez de 0l)
+        // CONFIGURAÇÃO DO SEU FIREBASE (Ajustada para funcionar)
         const firebaseConfig = {
             apiKey: "AIzaSyDyB1Rzcm_9TPYFHzlbJUMWIN9NupkXjG0",
             authDomain: "arena-fut-42a7d.firebaseapp.com",
@@ -34,22 +58,66 @@
             appId: "1:843798970197:web:222e052ef828065e5f39dc"
         };
 
-        // Inicializando o Firebase de forma compatível
+        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        function loginGoogle() {
+        // FUNÇÃO DE LOGIN
+        function fazerLogin() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
-                .then(() => { 
-                    document.getElementById('msg-status').innerText = "Sucesso! Arena conectada.";
-                    document.getElementById('msg-status').style.color = "#d4ff00";
+                .then((result) => {
+                    const user = result.user;
+                    salvarUsuarioNoBanco(user);
+                    mostrarTela('tela-principal');
+                    montarPerfil(user);
                 })
-                .catch(err => { 
-                    document.getElementById('msg-status').innerText = "Erro: " + err.message;
-                    document.getElementById('msg-status').style.color = "red";
+                .catch((error) => {
+                    document.getElementById('msg-erro').innerText = "Erro: " + error.message;
                 });
         }
+
+        // SALVAR DADOS NO FIRESTORE (Baseado nas suas Regras)
+        function salvarUsuarioNoBanco(user) {
+            db.collection("usuarios").doc(user.uid).set({
+                nome: user.displayName,
+                email: user.email,
+                foto: user.photoURL,
+                ultima_vez: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+
+        function montarPerfil(user) {
+            const container = document.getElementById('perfil-usuario');
+            container.innerHTML = `
+                <img src="${user.photoURL}" alt="Foto">
+                <div style="text-align: left;">
+                    <div style="font-weight: bold; font-size: 0.9rem;">${user.displayName}</div>
+                    <div style="font-size: 0.7rem; color: #888;">${user.email}</div>
+                </div>
+            `;
+        }
+
+        function mostrarTela(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function fazerLogout() {
+            auth.signOut().then(() => {
+                mostrarTela('tela-login');
+                location.reload();
+            });
+        }
+
+        // VERIFICAR SE JÁ ESTÁ LOGADO AO ABRIR
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                mostrarTela('tela-principal');
+                montarPerfil(user);
+            }
+        });
     </script>
 </body>
 </html>
