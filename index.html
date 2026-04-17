@@ -9,25 +9,28 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <style>
         :root { --primary: #d4ff00; --bg: #121212; --card: #1e1e1e; --text: #ffffff; }
-        body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; }
-        .screen { display: none; width: 100%; max-width: 500px; padding: 20px; }
+        body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .screen { display: none; width: 100%; max-width: 500px; padding: 20px; box-sizing: border-box; }
         .active { display: block; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; border-left: 4px solid var(--primary); }
-        button { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; border-left: 4px solid var(--primary); text-align: center; }
+        button { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; }
     </style>
 </head>
 <body>
     <div id="tela-login" class="screen active">
-        <h1 style="text-align:center; color:var(--primary);">ARENA FUT PRO</h1>
+        <h1 style="text-align:center; color:var(--primary); margin-top:50px;">ARENA FUT PRO</h1>
         <div class="card">
             <button onclick="loginGoogle()">Entrar com Google</button>
-            <p id="msg-erro" style="color:red; text-align:center; font-size:0.8rem; margin-top:10px;"></p>
+            <p id="msg-erro" style="color:red; font-size:0.8rem; margin-top:10px;"></p>
         </div>
     </div>
 
     <div id="tela-dashboard" class="screen">
-        <h2 style="color:var(--primary);">Logado com Sucesso!</h2>
-        <button onclick="location.reload()">Sair</button>
+        <h2 style="color:var(--primary); text-align:center;">Bem-vindo ao Arena Fut!</h2>
+        <div class="card">
+            <p>Login realizado com sucesso.</p>
+            <button onclick="location.reload()">Sair</button>
+        </div>
     </div>
 
     <script>
@@ -41,6 +44,7 @@
             appId: "1:843798970197:web:222e052ef828065e5f39dc"
         };
 
+        // Inicializa o Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
